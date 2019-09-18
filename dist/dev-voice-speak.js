@@ -56,7 +56,7 @@ class VoiceSpeak extends HTMLElement {
         height:40px;
         border-top: 1px solid #eee;
       }      
-      .input-panel iron-icon{width:40px;height:40px;display:inline-block;    padding: 5px 0 0 5px;}
+      .input-panel iron-icon{width:30px;height:30px;display:inline-block;    padding: 5px 0 0 5px;}
       .input-panel input{width:100%;background:white;border:none;text-indent:1em;outline:none;height: 40px;line-height: 40px;}
       .input-panel input[type='text']{display:none;}
       .input-panel input[type='button']:active{background:#eee;}
@@ -82,23 +82,28 @@ class VoiceSpeak extends HTMLElement {
     let div = document.createElement('div')
     div.classList.add('input-panel')
     div.innerHTML = `
-      <iron-icon icon="mdi:microphone">
-      </iron-icon><input type="text" placeholder="请输入要说的文字" maxlength="100" />
+      <iron-icon icon="mdi:microphone"></iron-icon>
+      <input type="text" placeholder="请输入要说的文字" maxlength="100" />
       <input type="button" value="按住 说话" />
+      <iron-icon icon="mdi:settings"></iron-icon>
     `
     cardContainer.appendChild(div)
     let _this = this
-    let ele_icon = div.querySelector('iron-icon')
+    let ele_icons = div.querySelectorAll('iron-icon')
     let ele_text = div.querySelector("input[type='text']")
     let ele_button = div.querySelector("input[type='button']")
     // 输入模式切换
-    ele_icon.addEventListener('click', function () {
+    ele_icons[0].addEventListener('click', function () {
       let icon = this.getAttribute('icon')
       let iconVoice = 'mdi:microphone'
       let isVoice = iconVoice === icon
       this.setAttribute('icon', isVoice ? 'mdi:text' : iconVoice)
       ele_text.style.display = isVoice ? 'block' : 'none'
       ele_button.style.display = !isVoice ? 'block' : 'none'
+    })
+    // 设置弹窗
+    ele_icons[1].addEventListener('click', function () {
+      console.log('设置面板')
     })
     // 处理文字输入
     ele_text.addEventListener('keypress', function (event) {
@@ -171,7 +176,7 @@ class VoiceSpeak extends HTMLElement {
     contentPanel.insertBefore(div, contentPanel.childNodes[0]);
     contentPanel.childNodes[0].scrollIntoView({
       behavior: 'smooth',
-      block: 'start'
+      block: 'center'
     })
   }
 
@@ -189,7 +194,7 @@ class VoiceSpeak extends HTMLElement {
     contentPanel.insertBefore(div, contentPanel.childNodes[0]);
     contentPanel.childNodes[0].scrollIntoView({
       behavior: 'smooth',
-      block: 'start'
+      block: 'center'
     })
   }
 
