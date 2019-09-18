@@ -1,0 +1,22 @@
+{
+  "name": "lovelace-speak",
+  "version": "1.0.0",
+  "description": "语音说话卡片",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shaonianzhentan/lovelace-speak.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/shaonianzhentan/lovelace-speak/issues"
+  },
+  "homepage": "https://github.com/shaonianzhentan/lovelace-speak#readme",
+  "dependencies": {
+    "@polymer/iron-icons": "^3.0.1"
+  }
+}
