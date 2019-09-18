@@ -37,10 +37,10 @@ class VoiceSpeak extends HTMLElement {
         display: flex;
         flex-direction: column;
       }
-      iron-icon{width:30px;height:30px;display:inline-block;}
       .content-panel{
         width: 100%;
         flex: 1;
+        box-sizing: border-box;
         overflow: auto;
         padding:8px;
       }      
@@ -53,12 +53,13 @@ class VoiceSpeak extends HTMLElement {
       .input-panel{
         display:flex;
         width:100%;
-        height:30px;
+        height:40px;
         border-top: 1px solid #eee;
-      }
-      .input-panel input{width:100%;background:white;border:none;text-indent:1em;outline:none;}
+      }      
+      .input-panel iron-icon{width:40px;height:40px;display:inline-block;    padding: 5px 0 0 5px;}
+      .input-panel input{width:100%;background:white;border:none;text-indent:1em;outline:none;height: 40px;line-height: 40px;}
       .input-panel input[type='text']{display:none;}
-      .input-panel input[type='button']:active{background:#eee;color:white;}
+      .input-panel input[type='button']:active{background:#eee;}
     `
     // 内容面板
     this._createdContentPanel(cardContainer)
@@ -146,9 +147,12 @@ class VoiceSpeak extends HTMLElement {
     recorder.stop((blob, duration) => {//到达指定条件停止录音
       console.log((window.URL || webkitURL).createObjectURL(blob), "时长:" + duration + "ms");
       recorder.close();//释放录音资源
-      //已经拿到blob文件对象想干嘛就干嘛：立即播放、上传
-      this._inputAudio(blob)
-
+      if (duration > 3000) {
+        //已经拿到blob文件对象想干嘛就干嘛：立即播放、上传
+        this._inputAudio(blob)
+      } else {
+        this._inputText('提示：当前录音时间没有3秒')
+      }
     }, function (msg) {
       console.log("录音失败:" + msg);
     });
@@ -162,8 +166,13 @@ class VoiceSpeak extends HTMLElement {
     audio.controls = true;
     div.appendChild(audio);
     audio.src = (window.URL || webkitURL).createObjectURL(blob);
-    audio.play();
-    this.card.querySelector('.content-panel').appendChild(div);
+    // audio.play();
+    let contentPanel = this.card.querySelector('.content-panel')
+    contentPanel.insertBefore(div, contentPanel.childNodes[0]);
+    contentPanel.childNodes[0].scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    })
   }
 
   // 输入文字
@@ -176,7 +185,12 @@ class VoiceSpeak extends HTMLElement {
         this._inputText(value)
       }
     }
-    this.card.querySelector('.content-panel').appendChild(div);
+    let contentPanel = this.card.querySelector('.content-panel')
+    contentPanel.insertBefore(div, contentPanel.childNodes[0]);
+    contentPanel.childNodes[0].scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    })
   }
 
   getCardSize() {
