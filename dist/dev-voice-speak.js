@@ -6,7 +6,7 @@ class VoiceSpeak extends HTMLElement {
     let script = document.createElement('script')
     // 如果在hass下，则使用hacs的路径
     if (location.pathname.indexOf('/lovelace') === 0) {
-      script.src = '/community_plugin/lovelace-voice-speak/dist/recorder.mp3.min.js'
+      script.src = '/community_plugin/lovelace-voice-speak/recorder.mp3.min.js'
     } else {
       script.src = './dist/recorder.mp3.min.js'
     }
@@ -81,7 +81,7 @@ class VoiceSpeak extends HTMLElement {
     let div = document.createElement('div')
     div.classList.add('input-panel')
     div.innerHTML = `
-      <iron-icon icon="mdi:keyboard_voice">
+      <iron-icon icon="mdi:microphone">
       </iron-icon><input type="text" placeholder="请输入要说的文字" maxlength="100" />
       <input type="button" value="按住 说话" />
     `
@@ -93,9 +93,9 @@ class VoiceSpeak extends HTMLElement {
     // 输入模式切换
     ele_icon.addEventListener('click', function () {
       let icon = this.getAttribute('icon')
-      let iconVoice = 'mdi:keyboard_voice'
+      let iconVoice = 'mdi:microphone'
       let isVoice = iconVoice === icon
-      this.setAttribute('icon', isVoice ? 'mdi:textsms' : iconVoice)
+      this.setAttribute('icon', isVoice ? 'mdi:text' : iconVoice)
       ele_text.style.display = isVoice ? 'block' : 'none'
       ele_button.style.display = !isVoice ? 'block' : 'none'
     })
