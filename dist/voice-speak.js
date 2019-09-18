@@ -1,4 +1,4 @@
-class CardSpeak extends HTMLElement {
+class VoiceSpeak extends HTMLElement {
 
   constructor() {
     super()
@@ -32,4 +32,4 @@ class CardSpeak extends HTMLElement {
   }
 }
 
-customElements.define('card-speak', CardSpeak);
+customElements.define('voice-speak', VoiceSpeak);
