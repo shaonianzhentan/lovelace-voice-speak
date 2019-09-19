@@ -72,10 +72,14 @@ class VoiceSpeak extends HTMLElement {
       }
       .dialog-setting.is-show{
         width: 100%;
-        height: 500px;
-        position: absolute;
+        height: 500px;        
+        position: relative;
+        float: left;
+        text-align:center;        
         background: rgba(0,0,0,.2);}
       .dialog-setting.is-hide{display:none;}
+      
+      .select-media{padding:10px;}
     `
     // 内容面板
     this._createdContentPanel(cardContainer)
@@ -185,7 +189,7 @@ class VoiceSpeak extends HTMLElement {
         //已经拿到blob文件对象想干嘛就干嘛：立即播放、上传
         this._inputAudio(blob)
       } else {
-        this._inputText('提示：当前录音时间没有3秒')
+        this._inputText('提示：当前录音时间没有3秒', -1)
       }
     }, function (msg) {
       console.log("录音失败:" + msg);
@@ -205,15 +209,16 @@ class VoiceSpeak extends HTMLElement {
   }
 
   // 输入文字
-  _inputText(value) {
+  _inputText(value, type) {
     let div = document.createElement("div");
     div.classList.add('content-text')
     div.textContent = value
-    console.log(this.hass)
-    let url = 'https://api.jiluxinqing.com/api/service/tts?text=' + value
-    console.log(url)
-    this._play(url)
     this._buildContent(div)
+
+    if (type != -1) {
+      let url = 'https://api.jiluxinqing.com/api/service/tts?text=' + value
+      this._play(url)
+    }
   }
 
   // ***************************************** 设置面板
@@ -228,14 +233,21 @@ class VoiceSpeak extends HTMLElement {
       })
       dialog.innerHTML = `
         选择播放器：<select class='select-media'>${arr.join('')}</select>
+        <br/><br/>
+        <button class="close-dialog">关闭</button>
       `
       this.shadowRoot.insertBefore(dialog, this.shadowRoot.childNodes[0])
       this.dialog = dialog
       this.dialog.classList.add('is-show')
-      dialog.querySelector('.select-media').onchange = (value) => {
-        console.log(value)
-        this._selectPlayer = value
+      let _this = this
+      dialog.querySelector('.select-media').onchange = function () {
+        _this._selectPlayer = this.value
       }
+      // 关闭弹窗
+      dialog.querySelector('.close-dialog').onchange = () => {
+        this.dialog.classList.add('is-hide')
+      }
+
     } else {
       if (this.dialog.classList.contains('is-hide')) {
         this.dialog.classList.remove('is-hide')
