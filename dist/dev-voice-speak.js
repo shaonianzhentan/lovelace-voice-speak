@@ -17,6 +17,7 @@ class VoiceSpeak extends HTMLElement {
   set hass(hass) {
     console.log(hass)
     // 这里更新数据
+    this._hass = hass
   }
 
   setConfig(config) {
@@ -65,6 +66,16 @@ class VoiceSpeak extends HTMLElement {
       .input-panel input{width:100%;background:white;border:none;text-indent:1em;outline:none;height: 38px;line-height: 38px;}
       .input-panel input[type='text']{display:none;}
       .input-panel input[type='button']:active{background:#eee;}
+      // 弹窗
+      .dialog-setting{
+        display:block;
+      }
+      .dialog-setting.is-show{
+        width: 100%;
+        height: 500px;
+        position: absolute;
+        background: rgba(0,0,0,.2);}
+      .dialog-setting.is-hide{display:none;}
     `
     // 内容面板
     this._createdContentPanel(cardContainer)
@@ -75,14 +86,27 @@ class VoiceSpeak extends HTMLElement {
     this.shadowRoot.appendChild(cardContainerStyle)
   }
 
-  // 创建内容面板
+  // ***************************************** 创建内容面板
   _createdContentPanel(cardContainer) {
     let div = document.createElement('div')
     div.classList.add('content-panel')
     cardContainer.appendChild(div)
   }
 
-  // 创建输入面板
+  // 添加到聊天列表中
+  _buildContent(child) {
+    let div = document.createElement("div");
+    div.classList.add('content-item')
+    div.appendChild(child)
+    let contentPanel = this.card.querySelector('.content-panel')
+    contentPanel.insertBefore(div, contentPanel.childNodes[0]);
+    contentPanel.childNodes[0].scrollIntoView({
+      behavior: 'smooth',
+      block: 'center'
+    })
+  }
+
+  // ***************************************** 创建输入面板
   _createdInputPanel(cardContainer) {
     let div = document.createElement('div')
     div.classList.add('input-panel')
@@ -107,8 +131,8 @@ class VoiceSpeak extends HTMLElement {
       ele_button.style.display = !isVoice ? 'block' : 'none'
     })
     // 设置弹窗
-    ele_icons[1].addEventListener('click', function () {
-      console.log('设置面板')
+    ele_icons[1].addEventListener('click', () => {
+      this._createdSettingPanel()
     })
     // 处理文字输入
     ele_text.addEventListener('keypress', function (event) {
@@ -192,26 +216,54 @@ class VoiceSpeak extends HTMLElement {
     this._buildContent(div)
   }
 
-  // 添加到聊天列表中
-  _buildContent(child){
-    let div = document.createElement("div");
-    div.classList.add('content-item')
-    div.appendChild(child)
-    let contentPanel = this.card.querySelector('.content-panel')
-    contentPanel.insertBefore(div, contentPanel.childNodes[0]);
-    contentPanel.childNodes[0].scrollIntoView({
-      behavior: 'smooth',
-      block: 'center'
-    })
+  // ***************************************** 设置面板
+  _createdSettingPanel() {
+    if (this.dialog == null) {
+      let dialog = document.createElement('div')
+      dialog.classList.add('dialog-setting')
+
+      let arr = []
+      this._getMediaPlayerList().forEach(ele => {
+        arr.push(`<option>${ele}</option>`)
+      })
+      dialog.innerHTML = `
+        选择播放器：<select class='select-media'>${arr.join('')}</select>
+      `
+      this.shadowRoot.insertBefore(dialog, this.shadowRoot.childNodes[0])
+      this.dialog = dialog
+      this.dialog.classList.add('is-show')
+      dialog.querySelector('.select-media').onchange = (value) => {
+        console.log(value)
+        this._selectPlayer = value
+      }
+    } else {
+      if (this.dialog.classList.contains('is-hide')) {
+        this.dialog.classList.remove('is-hide')
+      } else {
+        this.dialog.classList.add('is-hide')
+      }
+    }
+  }
+
+  _getMediaPlayerList() {
+    if (this._hass) return Object.keys(this._hass.states).filter(ele => ele.includes('media_player.'))
+    return []
   }
 
   // 调用服务
-  _play(url){
-    this.hass.callService('media_player', 'play_media', {
-      entity_id: 'media_player.clv',
-      media_content_id: url,
-      media_content_type: 'music'
-    });
+  _play(url) {
+    if (this._selectPlayer == null) {
+      let arr = this._getMediaPlayerList()
+      if (arr.length > 0) this._selectPlayer = arr[0]
+    }
+
+    if (this._selectPlayer) {
+      this._hass.callService('media_player', 'play_media', {
+        entity_id: this._selectPlayer,
+        media_content_id: url,
+        media_content_type: 'music'
+      });
+    }
   }
 
   getCardSize() {
