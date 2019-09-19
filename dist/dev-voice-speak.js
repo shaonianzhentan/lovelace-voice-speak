@@ -76,10 +76,13 @@ class VoiceSpeak extends HTMLElement {
         position: relative;
         float: left;
         text-align:center;        
+        box-sizing: border-box;
+        padding: 10px;
         background: rgba(0,0,0,.2);}
       .dialog-setting.is-hide{display:none;}
       
       .select-media{padding:10px;}
+      .close-dialog{padding: 10px;width: 100px;}
     `
     // 内容面板
     this._createdContentPanel(cardContainer)
@@ -185,11 +188,11 @@ class VoiceSpeak extends HTMLElement {
     recorder.stop((blob, duration) => {//到达指定条件停止录音
       console.log((window.URL || webkitURL).createObjectURL(blob), "时长:" + duration + "ms");
       recorder.close();//释放录音资源
-      if (duration > 3000) {
+      if (duration > 2000) {
         //已经拿到blob文件对象想干嘛就干嘛：立即播放、上传
         this._inputAudio(blob)
       } else {
-        this._inputText('提示：当前录音时间没有3秒', -1)
+        this._inputText('提示：当前录音时间没有2秒', -1)
       }
     }, function (msg) {
       console.log("录音失败:" + msg);
@@ -206,6 +209,18 @@ class VoiceSpeak extends HTMLElement {
     audio.src = (window.URL || webkitURL).createObjectURL(blob);
     // audio.play();
     this._buildContent(div)
+
+    let formData = new FormData()
+    formData.append('mp3', blob)
+    let key = '这里是自定义的key，防止资源链接被随便拿到'
+    fetch(`https://api.jiluxinqing.com/api/service/tts?key=${key}`, {
+      method: 'post',
+      body: formData
+    }).then(res => res.json()).then(res => {
+      if (res.code == 0) {
+        this._play(res.data)
+      }
+    })
   }
 
   // 输入文字
@@ -234,7 +249,7 @@ class VoiceSpeak extends HTMLElement {
       dialog.innerHTML = `
         选择播放器：<select class='select-media'>${arr.join('')}</select>
         <br/><br/>
-        <button class="close-dialog">关闭</button>
+        <button class="close-dialog">关闭设置</button>
       `
       this.shadowRoot.insertBefore(dialog, this.shadowRoot.childNodes[0])
       this.dialog = dialog
@@ -244,7 +259,7 @@ class VoiceSpeak extends HTMLElement {
         _this._selectPlayer = this.value
       }
       // 关闭弹窗
-      dialog.querySelector('.close-dialog').onchange = () => {
+      dialog.querySelector('.close-dialog').onclick = () => {
         this.dialog.classList.add('is-hide')
       }
 
