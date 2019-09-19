@@ -15,7 +15,6 @@ class VoiceSpeak extends HTMLElement {
   }
 
   set hass(hass) {
-    console.log(hass)
     // 这里更新数据
     this._hass = hass
   }
@@ -152,7 +151,9 @@ class VoiceSpeak extends HTMLElement {
     // 处理语音输入    
     let recorder = null
     let isPress = false
-    ele_button.addEventListener('mousedown', function (event) {
+    let isMobile = /Android|webOS|iPhone|iPod|BlackBerry/i.test(navigator.userAgent)
+    // 按下事件
+    let mousedownFunc = function (event) {
       console.log('开始监听语音输入')
       ele_button.value = '松开 结束'
       isPress = true
@@ -165,21 +166,31 @@ class VoiceSpeak extends HTMLElement {
         //dialog&&dialog.Cancel(); 如果开启了弹框，此处需要取消
         console.log((isUserNotAllow ? "UserNotAllow，" : "") + "无法录音:" + msg);
       });
-    })
-    ele_button.addEventListener('mouseup', function (event) {
+    }
+    // 放开事件
+    let mouseupFunc = function (event) {
       isPress = false
       ele_button.value = '按住 说话'
       event.stopPropagation()
+      event.stopImmediatePropagation()
+      event.preventDefault()
       _this._stopRecording.bind(_this)(recorder, 1)
-    })
-    document.addEventListener('mouseup', function (event) {
-      if (isPress) {
-        isPress = false
-        ele_button.value = '按住 说话'
-        _this._stopRecording.bind(_this)(recorder, 0)
-      }
-    })
-
+    }
+    // 判断是否为移动端
+    if (isMobile) {
+      ele_button.addEventListener('touchstart', mousedownFunc)
+      ele_button.addEventListener('touchend', mouseupFunc)
+    } else {
+      ele_button.addEventListener('mousedown', mousedownFunc)
+      ele_button.addEventListener('mouseup', mouseupFunc)
+      document.addEventListener('mouseup', function (event) {
+        if (isPress) {
+          isPress = false
+          ele_button.value = '按住 说话'
+          _this._stopRecording.bind(_this)(recorder, 0)
+        }
+      })
+    }
     this.card = cardContainer
   }
 

@@ -15,7 +15,9 @@ class VoiceSpeak extends HTMLElement {
   }
 
   set hass(hass) {
-
+    console.log(hass)
+    // 这里更新数据
+    this._hass = hass
   }
 
   setConfig(config) {
@@ -48,6 +50,10 @@ class VoiceSpeak extends HTMLElement {
       .content-panel .content-text,
       .content-panel .content-audio{padding:10px;border-radius:5px;margin-bottom:8px;
         border: 1px solid #eee;
+        display: inline-block;
+        max-width: 80%;
+        word-break: break-all;
+        background:white;
         box-shadow: 1px 1px 2px silver;}
 
       .input-panel{
@@ -56,10 +62,27 @@ class VoiceSpeak extends HTMLElement {
         height:40px;
         border-top: 1px solid #eee;
       }      
-      .input-panel iron-icon{width:40px;height:40px;display:inline-block;    padding: 5px 0 0 5px;}
-      .input-panel input{width:100%;background:white;border:none;text-indent:1em;outline:none;height: 40px;line-height: 40px;}
+      .input-panel iron-icon{width:30px;height:30px;display:inline-block;padding: 5px 8px 0 8px;}
+      .input-panel input{width:100%;background:white;border:none;text-indent:1em;outline:none;height: 38px;line-height: 38px;}
       .input-panel input[type='text']{display:none;}
       .input-panel input[type='button']:active{background:#eee;}
+      // 弹窗
+      .dialog-setting{
+        display:block;
+      }
+      .dialog-setting.is-show{
+        width: 100%;
+        height: 500px;        
+        position: relative;
+        float: left;
+        text-align:center;        
+        box-sizing: border-box;
+        padding: 10px;
+        background: rgba(0,0,0,.2);}
+      .dialog-setting.is-hide{display:none;}
+      
+      .select-media{padding:10px;}
+      .close-dialog{padding: 10px;width: 100px;}
     `
     // 内容面板
     this._createdContentPanel(cardContainer)
@@ -70,35 +93,53 @@ class VoiceSpeak extends HTMLElement {
     this.shadowRoot.appendChild(cardContainerStyle)
   }
 
-  // 创建内容面板
+  // ***************************************** 创建内容面板
   _createdContentPanel(cardContainer) {
     let div = document.createElement('div')
     div.classList.add('content-panel')
     cardContainer.appendChild(div)
   }
 
-  // 创建输入面板
+  // 添加到聊天列表中
+  _buildContent(child) {
+    let div = document.createElement("div");
+    div.classList.add('content-item')
+    div.appendChild(child)
+    let contentPanel = this.card.querySelector('.content-panel')
+    contentPanel.insertBefore(div, contentPanel.childNodes[0]);
+    contentPanel.childNodes[0].scrollIntoView({
+      behavior: 'smooth',
+      block: 'center'
+    })
+  }
+
+  // ***************************************** 创建输入面板
   _createdInputPanel(cardContainer) {
     let div = document.createElement('div')
     div.classList.add('input-panel')
     div.innerHTML = `
-      <iron-icon icon="mdi:microphone">
-      </iron-icon><input type="text" placeholder="请输入要说的文字" maxlength="100" />
+      <iron-icon icon="mdi:microphone"></iron-icon>
+      <input type="text" placeholder="请输入要说的文字" maxlength="100" />
       <input type="button" value="按住 说话" />
+      <iron-icon icon="mdi:settings"></iron-icon>
     `
     cardContainer.appendChild(div)
     let _this = this
-    let ele_icon = div.querySelector('iron-icon')
+    let ele_icons = div.querySelectorAll('iron-icon')
     let ele_text = div.querySelector("input[type='text']")
     let ele_button = div.querySelector("input[type='button']")
     // 输入模式切换
-    ele_icon.addEventListener('click', function () {
+    ele_icons[0].addEventListener('click', function () {
       let icon = this.getAttribute('icon')
       let iconVoice = 'mdi:microphone'
       let isVoice = iconVoice === icon
       this.setAttribute('icon', isVoice ? 'mdi:text' : iconVoice)
       ele_text.style.display = isVoice ? 'block' : 'none'
       ele_button.style.display = !isVoice ? 'block' : 'none'
+    })
+    // 设置弹窗
+    ele_icons[1].addEventListener('click', () => {
+      this._createdSettingPanel()
     })
     // 处理文字输入
     ele_text.addEventListener('keypress', function (event) {
@@ -147,11 +188,11 @@ class VoiceSpeak extends HTMLElement {
     recorder.stop((blob, duration) => {//到达指定条件停止录音
       console.log((window.URL || webkitURL).createObjectURL(blob), "时长:" + duration + "ms");
       recorder.close();//释放录音资源
-      if (duration > 3000) {
+      if (duration > 2000) {
         //已经拿到blob文件对象想干嘛就干嘛：立即播放、上传
         this._inputAudio(blob)
       } else {
-        this._inputText('提示：当前录音时间没有3秒')
+        this._inputText('提示：当前录音时间没有2秒', -1)
       }
     }, function (msg) {
       console.log("录音失败:" + msg);
@@ -167,30 +208,88 @@ class VoiceSpeak extends HTMLElement {
     div.appendChild(audio);
     audio.src = (window.URL || webkitURL).createObjectURL(blob);
     // audio.play();
-    let contentPanel = this.card.querySelector('.content-panel')
-    contentPanel.insertBefore(div, contentPanel.childNodes[0]);
-    contentPanel.childNodes[0].scrollIntoView({
-      behavior: 'smooth',
-      block: 'start'
+    this._buildContent(div)
+
+    let formData = new FormData()
+    formData.append('mp3', blob)
+    fetch(`https://api.jiluxinqing.com/api/service/tts`, {
+      method: 'post',
+      body: formData
+    }).then(res => res.json()).then(res => {
+      if (res.code == 0) {
+        this._play(res.data)
+      }
     })
   }
 
   // 输入文字
-  _inputText(value) {
+  _inputText(value, type) {
     let div = document.createElement("div");
     div.classList.add('content-text')
     div.textContent = value
-    div.ondblclick = () => {
-      if (confirm('确定重发')) {
-        this._inputText(value)
+    this._buildContent(div)
+
+    if (type != -1) {
+      let url = 'https://api.jiluxinqing.com/api/service/tts?text=' + value
+      this._play(url)
+    }
+  }
+
+  // ***************************************** 设置面板
+  _createdSettingPanel() {
+    if (this.dialog == null) {
+      let dialog = document.createElement('div')
+      dialog.classList.add('dialog-setting')
+
+      let arr = []
+      this._getMediaPlayerList().forEach(ele => {
+        arr.push(`<option>${ele}</option>`)
+      })
+      dialog.innerHTML = `
+        选择播放器：<select class='select-media'>${arr.join('')}</select>
+        <br/><br/>
+        <button class="close-dialog">关闭设置</button>
+      `
+      this.shadowRoot.insertBefore(dialog, this.shadowRoot.childNodes[0])
+      this.dialog = dialog
+      this.dialog.classList.add('is-show')
+      let _this = this
+      dialog.querySelector('.select-media').onchange = function () {
+        _this._selectPlayer = this.value
+      }
+      // 关闭弹窗
+      dialog.querySelector('.close-dialog').onclick = () => {
+        this.dialog.classList.add('is-hide')
+      }
+
+    } else {
+      if (this.dialog.classList.contains('is-hide')) {
+        this.dialog.classList.remove('is-hide')
+      } else {
+        this.dialog.classList.add('is-hide')
       }
     }
-    let contentPanel = this.card.querySelector('.content-panel')
-    contentPanel.insertBefore(div, contentPanel.childNodes[0]);
-    contentPanel.childNodes[0].scrollIntoView({
-      behavior: 'smooth',
-      block: 'start'
-    })
+  }
+
+  _getMediaPlayerList() {
+    if (this._hass) return Object.keys(this._hass.states).filter(ele => ele.includes('media_player.'))
+    return []
+  }
+
+  // 调用服务
+  _play(url) {
+    if (this._selectPlayer == null) {
+      let arr = this._getMediaPlayerList()
+      if (arr.length > 0) this._selectPlayer = arr[0]
+    }
+
+    if (this._selectPlayer) {
+      this._hass.callService('media_player', 'play_media', {
+        entity_id: this._selectPlayer,
+        media_content_id: url,
+        media_content_type: 'music'
+      });
+    }
   }
 
   getCardSize() {
