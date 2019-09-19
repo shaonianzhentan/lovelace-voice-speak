@@ -16,6 +16,7 @@ class VoiceSpeak extends HTMLElement {
 
   set hass(hass) {
     console.log(hass)
+    // 这里更新数据
   }
 
   setConfig(config) {
@@ -61,7 +62,7 @@ class VoiceSpeak extends HTMLElement {
         border-top: 1px solid #eee;
       }      
       .input-panel iron-icon{width:30px;height:30px;display:inline-block;padding: 5px 8px 0 8px;}
-      .input-panel input{width:100%;background:white;border:none;text-indent:1em;outline:none;height: 40px;line-height: 40px;}
+      .input-panel input{width:100%;background:white;border:none;text-indent:1em;outline:none;height: 38px;line-height: 38px;}
       .input-panel input[type='text']{display:none;}
       .input-panel input[type='button']:active{background:#eee;}
     `
@@ -184,6 +185,7 @@ class VoiceSpeak extends HTMLElement {
     let div = document.createElement("div");
     div.classList.add('content-text')
     div.textContent = value
+    console.log(this)
     console.log('https://api.jiluxinqing.com/api/service/tts?text=' + value)
     this._buildContent(div)
   }
@@ -199,6 +201,11 @@ class VoiceSpeak extends HTMLElement {
       behavior: 'smooth',
       block: 'center'
     })
+  }
+
+  // 调用服务
+  _callService(domain, service, data){
+    this.hass.callService(domain, service, data);
   }
 
   getCardSize() {
