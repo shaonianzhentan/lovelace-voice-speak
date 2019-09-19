@@ -185,8 +185,10 @@ class VoiceSpeak extends HTMLElement {
     let div = document.createElement("div");
     div.classList.add('content-text')
     div.textContent = value
-    console.log(this)
-    console.log('https://api.jiluxinqing.com/api/service/tts?text=' + value)
+    console.log(this.hass)
+    let url = 'https://api.jiluxinqing.com/api/service/tts?text=' + value
+    console.log(url)
+    this._play(url)
     this._buildContent(div)
   }
 
@@ -204,8 +206,12 @@ class VoiceSpeak extends HTMLElement {
   }
 
   // 调用服务
-  _callService(domain, service, data){
-    this.hass.callService(domain, service, data);
+  _play(url){
+    this.hass.callService('media_player', 'play_media', {
+      entity_id: 'media_player.clv',
+      media_content_id: url,
+      media_content_type: 'music'
+    });
   }
 
   getCardSize() {
