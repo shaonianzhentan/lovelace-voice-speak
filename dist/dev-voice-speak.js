@@ -15,7 +15,7 @@ class VoiceSpeak extends HTMLElement {
   }
 
   set hass(hass) {
-
+    console.log(hass)
   }
 
   setConfig(config) {
@@ -48,6 +48,10 @@ class VoiceSpeak extends HTMLElement {
       .content-panel .content-text,
       .content-panel .content-audio{padding:10px;border-radius:5px;margin-bottom:8px;
         border: 1px solid #eee;
+        display: inline-block;
+        max-width: 80%;
+        word-break: break-all;
+        background:white;
         box-shadow: 1px 1px 2px silver;}
 
       .input-panel{
@@ -56,7 +60,7 @@ class VoiceSpeak extends HTMLElement {
         height:40px;
         border-top: 1px solid #eee;
       }      
-      .input-panel iron-icon{width:30px;height:30px;display:inline-block;    padding: 5px 0 0 5px;}
+      .input-panel iron-icon{width:30px;height:30px;display:inline-block;padding: 5px 8px 0 8px;}
       .input-panel input{width:100%;background:white;border:none;text-indent:1em;outline:none;height: 40px;line-height: 40px;}
       .input-panel input[type='text']{display:none;}
       .input-panel input[type='button']:active{background:#eee;}
@@ -172,12 +176,7 @@ class VoiceSpeak extends HTMLElement {
     div.appendChild(audio);
     audio.src = (window.URL || webkitURL).createObjectURL(blob);
     // audio.play();
-    let contentPanel = this.card.querySelector('.content-panel')
-    contentPanel.insertBefore(div, contentPanel.childNodes[0]);
-    contentPanel.childNodes[0].scrollIntoView({
-      behavior: 'smooth',
-      block: 'center'
-    })
+    this._buildContent(div)
   }
 
   // 输入文字
@@ -185,11 +184,15 @@ class VoiceSpeak extends HTMLElement {
     let div = document.createElement("div");
     div.classList.add('content-text')
     div.textContent = value
-    div.ondblclick = () => {
-      if (confirm('确定重发')) {
-        this._inputText(value)
-      }
-    }
+    console.log('https://api.jiluxinqing.com/api/service/tts?text=' + value)
+    this._buildContent(div)
+  }
+
+  // 添加到聊天列表中
+  _buildContent(child){
+    let div = document.createElement("div");
+    div.classList.add('content-item')
+    div.appendChild(child)
     let contentPanel = this.card.querySelector('.content-panel')
     contentPanel.insertBefore(div, contentPanel.childNodes[0]);
     contentPanel.childNodes[0].scrollIntoView({
