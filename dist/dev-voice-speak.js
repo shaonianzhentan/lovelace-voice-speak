@@ -212,8 +212,7 @@ class VoiceSpeak extends HTMLElement {
 
     let formData = new FormData()
     formData.append('mp3', blob)
-    let key = '这里是自定义的key，防止资源链接被随便拿到'
-    fetch(`https://api.jiluxinqing.com/api/service/tts?key=${key}`, {
+    fetch(`https://api.jiluxinqing.com/api/service/tts`, {
       method: 'post',
       body: formData
     }).then(res => res.json()).then(res => {
