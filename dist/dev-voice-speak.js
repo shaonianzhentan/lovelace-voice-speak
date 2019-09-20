@@ -53,7 +53,10 @@ class VoiceSpeak extends HTMLElement {
         border-radius: 50%;
         margin-right: 8px;
         overflow: hidden;
+        text-align: center;
+        cursor:pointer;
       }
+      .content-panel .content-item-icon iron-icon{margin-top: 7px;}
       .content-panel .content-text,
       .content-panel .content-audio{padding:10px;border-radius:5px;margin-bottom:8px;
         display: inline-block;
@@ -68,7 +71,7 @@ class VoiceSpeak extends HTMLElement {
         height:40px;
         border-top: 1px solid #eee;
       }      
-      .input-panel iron-icon{width:30px;height:30px;display:inline-block;padding: 5px 8px 0 8px;}
+      .input-panel iron-icon{width:30px;height:30px;display:inline-block;padding: 5px 8px 0 8px;cursor:pointer;}
       .input-panel input{width:100%;background:white;border:none;text-indent:1em;outline:none;height: 38px;line-height: 38px;}
       .input-panel input[type='text']{display:none;}
       .input-panel input[type='button']:active{background:#eee;}
@@ -84,11 +87,17 @@ class VoiceSpeak extends HTMLElement {
         text-align:center;        
         box-sizing: border-box;
         padding: 10px;
-        background: rgba(0,0,0,.2);}
+        background: var(--primary-background-color);}
       .dialog-setting.is-hide{display:none;}
       
-      .select-media{padding:10px;}
-      .close-dialog{padding: 10px;width: 100px;}
+      .select-media{padding:10px;
+        border: 1px solid var(--primary-color);
+      }
+      .close-dialog{
+        padding: 10px;width: 100px;
+        background: var(--primary-color);
+        border: none;
+        color: var(--primary-background-color);}
     `
     // 内容面板
     this._createdContentPanel(cardContainer)
@@ -104,27 +113,6 @@ class VoiceSpeak extends HTMLElement {
     let div = document.createElement('div')
     div.classList.add('content-panel')
     cardContainer.appendChild(div)
-  }
-
-  // 添加到聊天列表中
-  _buildContent(child) {
-    // 添加重试
-    let op = document.createElement('div')
-    op.classList.add('content-item-icon')
-    op.innerHTML = `
-    <iron-icon icon="mdi:refresh"></iron-icon>
-    `
-    // 生成节点
-    let div = document.createElement("div");
-    div.classList.add('content-item')
-    div.appendChild(op)
-    div.appendChild(child)
-    let contentPanel = this.card.querySelector('.content-panel')
-    contentPanel.insertBefore(div, contentPanel.childNodes[0]);
-    contentPanel.childNodes[0].scrollIntoView({
-      behavior: 'smooth',
-      block: 'center'
-    })
   }
 
   // ***************************************** 创建输入面板
@@ -227,14 +215,6 @@ class VoiceSpeak extends HTMLElement {
 
   // 发送语音
   _inputAudio(blob) {
-    let div = document.createElement("div");
-    div.classList.add('content-audio')
-    let audio = document.createElement("audio");
-    audio.controls = true;
-    div.appendChild(audio);
-    audio.src = (window.URL || webkitURL).createObjectURL(blob);
-    // audio.play();
-    this._buildContent(div)
 
     let formData = new FormData()
     formData.append('mp3', blob)
@@ -243,22 +223,67 @@ class VoiceSpeak extends HTMLElement {
       body: formData
     }).then(res => res.json()).then(res => {
       if (res.code == 0) {
-        this._play(res.data)
+        let mp3 = res.data
+
+        let div = document.createElement("div");
+        div.classList.add('content-audio')
+        let audio = document.createElement("audio");
+        audio.controls = true;
+        div.appendChild(audio);
+        audio.src = (window.URL || webkitURL).createObjectURL(blob);
+        // audio.play();
+        div.dataset['url'] = mp3
+        this._buildContent(div)
+
+        this._play(mp3)
       }
     })
+
   }
 
   // 输入文字
   _inputText(value, type) {
+    let url = 'https://api.jiluxinqing.com/api/service/tts?text=' + value
     let div = document.createElement("div");
     div.classList.add('content-text')
     div.textContent = value
+    div.dataset['type'] = type
+    div.dataset['url'] = url
     this._buildContent(div)
 
     if (type != -1) {
-      let url = 'https://api.jiluxinqing.com/api/service/tts?text=' + value
       this._play(url)
     }
+  }
+
+  // 添加到聊天列表中
+  _buildContent(child) {
+    // 生成节点
+    let div = document.createElement("div");
+    div.classList.add('content-item')
+
+    // 添加重试
+    if (child.dataset['type'] != -1) {
+      let op = document.createElement('div')
+      op.classList.add('content-item-icon')
+      op.innerHTML = `
+      <iron-icon icon="mdi:refresh"></iron-icon>
+      `
+      op.onclick = () => {
+        let url = child.dataset['url']
+        if (url) this._play(url)
+      }
+      div.appendChild(op)
+    }
+
+    div.appendChild(child)
+
+    let contentPanel = this.card.querySelector('.content-panel')
+    contentPanel.insertBefore(div, contentPanel.childNodes[0]);
+    contentPanel.childNodes[0].scrollIntoView({
+      behavior: 'smooth',
+      block: 'center'
+    })
   }
 
   // ***************************************** 设置面板
@@ -272,6 +297,9 @@ class VoiceSpeak extends HTMLElement {
         arr.push(`<option>${ele}</option>`)
       })
       dialog.innerHTML = `
+        <br/><br/>
+        版本：v1.0
+        <br/><br/>
         选择播放器：<select class='select-media'>${arr.join('')}</select>
         <br/><br/>
         <button class="close-dialog">关闭设置</button>
