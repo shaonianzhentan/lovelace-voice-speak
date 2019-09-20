@@ -46,17 +46,17 @@ class VoiceSpeak extends HTMLElement {
         padding:8px;
       }      
       .content-panel .content-item-icon{
-        width: 40px;
-        height: 40px;
+        width: 30px;
+        height: 30px;
         float: left;
-        background: silver;
+        border: 1px solid var(--primary-color);
         border-radius: 50%;
         margin-right: 8px;
         overflow: hidden;
         text-align: center;
         cursor:pointer;
       }
-      .content-panel .content-item-icon iron-icon{margin-top: 7px;}
+      .content-panel .content-item-icon iron-icon{margin-top: 2px;}
       .content-panel .content-text,
       .content-panel .content-audio{padding:10px;border-radius:5px;margin-bottom:8px;
         display: inline-block;
