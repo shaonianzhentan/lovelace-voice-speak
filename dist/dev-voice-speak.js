@@ -87,6 +87,7 @@ class VoiceSpeak extends HTMLElement {
         text-align:center;        
         box-sizing: border-box;
         padding: 10px;
+        box-shadow: 0 0 3px silver;
         background: var(--primary-background-color);}
       .dialog-setting.is-hide{display:none;}
       
@@ -243,7 +244,7 @@ class VoiceSpeak extends HTMLElement {
 
   // 输入文字
   _inputText(value, type) {
-    let url = 'https://api.jiluxinqing.com/api/service/tts?text=' + value
+    let url = 'https://api.jiluxinqing.com/api/service/tts?text=' + encodeURIComponent(value)
     let div = document.createElement("div");
     div.classList.add('content-text')
     div.textContent = value
