@@ -45,15 +45,22 @@ class VoiceSpeak extends HTMLElement {
         overflow: auto;
         padding:8px;
       }      
-      
+      .content-panel .content-item-icon{
+        width: 40px;
+        height: 40px;
+        float: left;
+        background: silver;
+        border-radius: 50%;
+        margin-right: 8px;
+        overflow: hidden;
+      }
       .content-panel .content-text,
       .content-panel .content-audio{padding:10px;border-radius:5px;margin-bottom:8px;
-        border: 1px solid #eee;
         display: inline-block;
         max-width: 80%;
         word-break: break-all;
-        background:white;
-        box-shadow: 1px 1px 2px silver;}
+        background-color: var(--primary-color);
+        color:white;}
 
       .input-panel{
         display:flex;
@@ -101,8 +108,16 @@ class VoiceSpeak extends HTMLElement {
 
   // 添加到聊天列表中
   _buildContent(child) {
+    // 添加重试
+    let op = document.createElement('div')
+    op.classList.add('content-item-icon')
+    op.innerHTML = `
+    <iron-icon icon="mdi:refresh"></iron-icon>
+    `
+    // 生成节点
     let div = document.createElement("div");
     div.classList.add('content-item')
+    div.appendChild(op)
     div.appendChild(child)
     let contentPanel = this.card.querySelector('.content-panel')
     contentPanel.insertBefore(div, contentPanel.childNodes[0]);
