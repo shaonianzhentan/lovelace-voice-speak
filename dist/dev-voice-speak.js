@@ -299,7 +299,7 @@ class VoiceSpeak extends HTMLElement {
       })
       dialog.innerHTML = `
         <br/><br/>
-        版本：v1.0
+        更新日期：2019-9-20
         <br/><br/>
         选择播放器：<select class='select-media'>${arr.join('')}</select>
         <br/><br/>
