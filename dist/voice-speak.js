@@ -167,8 +167,11 @@ class VoiceSpeak extends HTMLElement {
         //dialog&&dialog.Cancel(); 如果开启了弹框，此处需要取消
         recorder.start();//开始录音
       }, function (msg, isUserNotAllow) {//用户拒绝未授权或不支持
-        //dialog&&dialog.Cancel(); 如果开启了弹框，此处需要取消
         console.log((isUserNotAllow ? "UserNotAllow，" : "") + "无法录音:" + msg);
+        // 如果没有权限，则显示提示
+        if (isUserNotAllow) {
+          alert('无法录音：' + msg)
+        }
       });
     }
     // 放开事件
@@ -344,6 +347,8 @@ class VoiceSpeak extends HTMLElement {
         media_content_id: url,
         media_content_type: 'music'
       });
+    } else {
+      alert("你的HomeAssistant里没有配置媒体播放器")
     }
   }
 
